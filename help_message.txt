@@ -1,0 +1,21 @@
+CLI Pokedex Application Help
+=====================
+
+Below are the available commands:
+
+1. help
+   - Description: Displays this help message.
+   - Usage: Type 'help' and press Enter.
+
+2. clear
+   - Description: Clears the terminal screen.
+   - Usage: Type 'clear' and press Enter.
+
+3. exit
+   - Description: Exits the CLI application and returns to the terminal.
+   - Usage: Type 'exit' and press Enter.
+
+4. map
+    - Description: Displays the names of 20 location areas in the Pokemon world
+    - Usage: Type 'map' and press Enter. Each subsequent call to map should display the next 20 locations, and so on. 
+        The map command will let us explore the world of Pokemon.

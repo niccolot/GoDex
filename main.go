@@ -1,11 +1,14 @@
 package main
 
 import (
-	"fmt"
 	"bufio"
+	"fmt"
+	"io"
+	"net/http"
 	"os"
 	"os/exec"
 	"strings"
+	"errors"
 )
 
 type cliCommand struct {
@@ -17,7 +20,7 @@ type cliCommand struct {
 
 func printPrompt() {
 
-	fmt.Print("\nPokedex > ")
+	fmt.Print("\n\nPokedex > ")
 }
 
 func printUnknown(text string) {
@@ -26,12 +29,33 @@ func printUnknown(text string) {
 }
 
 func commandHelp() error {
-	fmt.Print("COMMAND MESSAGE HERE")
+	helpMessagePath := "help_message.txt"
+	file, err := os.Open(helpMessagePath)
+
+	if err != nil {
+		return err
+	} 
+
+	defer file.Close()
+
+	fileInfo, err := file.Stat()
+	if err != nil {
+		return err
+	}
+
+	fileSize := fileInfo.Size()
+	content := make([]byte, fileSize)
+	_, err = file.Read(content)
+	if err != nil {
+		return err
+	}
+	fmt.Print(string(content))
+
 	return nil
 }
 
 func commandExit() error {
-	// EXIT CLI
+
 	return nil
 }
 
@@ -39,6 +63,30 @@ func commandClear() error {
 	cmd := exec.Command("clear")
 	cmd.Stdout = os.Stdout
 	cmd.Run()
+	return nil
+}
+
+func commandMap() error {
+	locations := "https://pokeapi.co/api/v2/location-area/"
+	res, err := http.Get(locations)
+	if err != nil {
+		return err
+	}
+	
+	body, err := io.ReadAll(res.Body)
+	if err != nil {
+		return err
+	}
+	
+	defer res.Body.Close()
+
+	if res.StatusCode > 299 {
+		errorMsg := fmt.Sprintf("Response failsed with status code %d and\nbody: %s\n", res.StatusCode, body)
+		return errors.New(errorMsg)
+	}
+
+	fmt.Print(len(body))
+
 	return nil
 }
 
@@ -68,6 +116,11 @@ func main() {
 			description: "Clears the screen",
 			callback: commandClear,
 		},
+		"map": {
+			name: "map",
+			description: "Displays the names of 20 location areas in the Pokemon world",
+			callback: commandMap,
+		},
 	}
 
 	reader := bufio.NewScanner(os.Stdin)
@@ -80,6 +133,7 @@ func main() {
 			if err != nil {
 				fmt.Errorf("Failed to execute command '%s': %w", text, err)
 			}
+			if command.name == "exit" { return }
 		} else {
 			printUnknown(text)
 		}
