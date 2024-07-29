@@ -10,6 +10,7 @@ import (
 	"strings"
 	"errors"
 	"encoding/json"
+	"github.com/niccolot/GoDex/pokeapi"
 )
 
 type cliCommand struct {
@@ -74,27 +75,12 @@ func commandClear(c *config) error {
 }
 
 func commandMap(c *config) error {
-
-	type PokeAPIDataLocations struct {
-		Count    int    `json:"count"`
-		Next     string `json:"next"`
-		Previous *string    `json:"previous"`
-		Results  []struct {
-			Name string `json:"name"`
-			URL  string `json:"url"`
-		} `json:"results"`
-	}
-
-	//offset := 0
-	//limit := 20
-	//locations := fmt.Sprintf("https://pokeapi.co/api/v2/location-area?offset=%d&limit=%d", offset, limit)
 	locations := c.nextLocations
 	c.prevLocations = locations
+	c.locationOffset += c.locationLimit
 	c.nextLocations = fmt.Sprintf("https://pokeapi.co/api/v2/location-area?offset=%d&limit=%d", 
 									c.locationOffset, 
 									c.locationLimit)
-
-	c.locationOffset += c.locationLimit
 	res, err := http.Get(locations)
 	if err != nil {
 		return err
@@ -112,7 +98,7 @@ func commandMap(c *config) error {
 		return errors.New(errorMsg)
 	}
 
-	data := PokeAPIDataLocations{}
+	data := pokeapi.PokeAPIDataLocations{}
 	errUnmarshal := json.Unmarshal(body, &data)
 	if errUnmarshal != nil {
 		return errUnmarshal
@@ -123,6 +109,13 @@ func commandMap(c *config) error {
 	return nil
 }
 
+func commandUMap(c *config) error {
+	locations := c.prevLocations
+	if locations == "" {
+		return errors.New("No previous locations")
+	}
+	return nil
+}
 
 func cleanInput(text string) string {
 	// removes trailing whitespaces and lowercases the command
