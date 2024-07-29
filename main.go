@@ -9,14 +9,21 @@ import (
 	"os/exec"
 	"strings"
 	"errors"
+	"encoding/json"
 )
 
 type cliCommand struct {
 	name        string
 	description string
-	callback    func() error
+	callback    func(c *config) error
 }
 
+type config struct {
+	locationLimit int
+	locationOffset int
+	prevLocations string
+	nextLocations string
+}
 
 func printPrompt() {
 
@@ -28,7 +35,7 @@ func printUnknown(text string) {
 	fmt.Printf("'%s' command not found", text)
 }
 
-func commandHelp() error {
+func commandHelp(c *config) error {
 	helpMessagePath := "help_message.txt"
 	file, err := os.Open(helpMessagePath)
 
@@ -54,20 +61,40 @@ func commandHelp() error {
 	return nil
 }
 
-func commandExit() error {
+func commandExit(c *config) error {
 
 	return nil
 }
 
-func commandClear() error {
+func commandClear(c *config) error {
 	cmd := exec.Command("clear")
 	cmd.Stdout = os.Stdout
 	cmd.Run()
 	return nil
 }
 
-func commandMap() error {
-	locations := "https://pokeapi.co/api/v2/location-area/"
+func commandMap(c *config) error {
+
+	type PokeAPIDataLocations struct {
+		Count    int    `json:"count"`
+		Next     string `json:"next"`
+		Previous *string    `json:"previous"`
+		Results  []struct {
+			Name string `json:"name"`
+			URL  string `json:"url"`
+		} `json:"results"`
+	}
+
+	//offset := 0
+	//limit := 20
+	//locations := fmt.Sprintf("https://pokeapi.co/api/v2/location-area?offset=%d&limit=%d", offset, limit)
+	locations := c.nextLocations
+	c.prevLocations = locations
+	c.nextLocations = fmt.Sprintf("https://pokeapi.co/api/v2/location-area?offset=%d&limit=%d", 
+									c.locationOffset, 
+									c.locationLimit)
+
+	c.locationOffset += c.locationLimit
 	res, err := http.Get(locations)
 	if err != nil {
 		return err
@@ -81,14 +108,21 @@ func commandMap() error {
 	defer res.Body.Close()
 
 	if res.StatusCode > 299 {
-		errorMsg := fmt.Sprintf("Response failsed with status code %d and\nbody: %s\n", res.StatusCode, body)
+		errorMsg := fmt.Sprintf("Response failed with status code %d\n", res.StatusCode)
 		return errors.New(errorMsg)
 	}
 
-	fmt.Print(len(body))
+	data := PokeAPIDataLocations{}
+	errUnmarshal := json.Unmarshal(body, &data)
+	if errUnmarshal != nil {
+		return errUnmarshal
+	}
+
+	fmt.Print(data.Results[0])
 
 	return nil
 }
+
 
 func cleanInput(text string) string {
 	// removes trailing whitespaces and lowercases the command
@@ -123,13 +157,22 @@ func main() {
 		},
 	}
 
+	c := config{
+		locationLimit: 10,
+		locationOffset: 0,
+		prevLocations: "",
+	}
+	c.nextLocations = fmt.Sprintf("https://pokeapi.co/api/v2/location-area?offset=%d&limit=%d", 
+									c.locationOffset, 
+									c.locationLimit)
+
 	reader := bufio.NewScanner(os.Stdin)
 	printPrompt()
 	for reader.Scan() {
 		text := cleanInput(reader.Text())
 		command, exists := cliCommandsTable[text]
 		if exists {
-			err := command.callback()
+			err := command.callback(&c)
 			if err != nil {
 				fmt.Errorf("Failed to execute command '%s': %w", text, err)
 			}
