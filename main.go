@@ -1,22 +1,18 @@
 package main
 
 import (
-	"bufio"
 	"fmt"
-	"io"
-	"net/http"
 	"os"
-	"os/exec"
-	"strings"
-	"errors"
-	"encoding/json"
-	"github.com/niccolot/GoDex/pokeapi"
+	"bufio"
+	"github.com/niccolot/GoDex/types"
+	"github.com/niccolot/GoDex/commands"
+	"github.com/niccolot/GoDex/utils"
 )
-
+/*
 type cliCommand struct {
-	name        string
-	description string
-	callback    func(c *config) error
+	Name        string
+	Description string
+	Callback    func(c *config) error
 }
 
 type config struct {
@@ -109,11 +105,51 @@ func commandMap(c *config) error {
 	return nil
 }
 
-func commandUMap(c *config) error {
+func commandMapb(c *config) error {
 	locations := c.prevLocations
 	if locations == "" {
 		return errors.New("No previous locations")
 	}
+	c.nextLocations = locations
+	c.locationOffset -= c.locationLimit
+	if c.locationOffset < 0 {
+		c.locationOffset = 0
+	}
+	c.prevLocations = fmt.Sprintf("https://pokeapi.co/api/v2/location-area?offset=%d&limit=%d", 
+									c.locationOffset, 
+									c.locationLimit)
+	
+	err := printLocations(locations)
+
+	return err
+}
+
+func printLocations(locations string) error {
+	res, err := http.Get(locations)
+	if err != nil {
+		return err
+	}
+	
+	body, err := io.ReadAll(res.Body)
+	if err != nil {
+		return err
+	}
+	
+	defer res.Body.Close()
+
+	if res.StatusCode > 299 {
+		errorMsg := fmt.Sprintf("Response failed with status code %d\n", res.StatusCode)
+		return errors.New(errorMsg)
+	}
+
+	data := pokeapi.PokeAPIDataLocations{}
+	errUnmarshal := json.Unmarshal(body, &data)
+	if errUnmarshal != nil {
+		return errUnmarshal
+	}
+
+	fmt.Print(data.Results[0])
+
 	return nil
 }
 
@@ -125,54 +161,61 @@ func cleanInput(text string) string {
 	return outCmd
 }
 
+*/
+
 func main() {
 
-	cliCommandsTable := map[string]cliCommand{
+	cliCommandsTable := map[string]types.CliCommand{
 		"help": {
-			name: "help",
-			description: "Displays a help message",
-			callback: commandHelp,
+			Name: "help",
+			Description: "Displays a help message",
+			Callback: commands.CommandHelp,
 		},
 		"exit": {
-			name: "exit",
-			description: "Quits the Pokedex CLI application and returns to terminal",
-			callback: commandExit,
+			Name: "exit",
+			Description: "Quits the Pokedex CLI application and returns to terminal",
+			Callback: commands.CommandExit,
 		},
 		"clear": {
-			name: "clear",
-			description: "Clears the screen",
-			callback: commandClear,
+			Name: "clear",
+			Description: "Clears the screen",
+			Callback: commands.CommandClear,
 		},
 		"map": {
-			name: "map",
-			description: "Displays the names of 20 location areas in the Pokemon world",
-			callback: commandMap,
+			Name: "map",
+			Description: "Displays the Names of 20 location areas in the Pokemon world",
+			Callback: commands.CommandMap,
+		},
+		"mapb": {
+			Name: "umap",
+			Description: "Displays the Names of the previous 20 location areas in the Pokemon world",
+			Callback: commands.CommandMapb,
 		},
 	}
 
-	c := config{
-		locationLimit: 10,
-		locationOffset: 0,
-		prevLocations: "",
+	c := types.Config{
+		LocationLimit: 10,
+		LocationOffset: 0,
+		PrevLocations: "",
 	}
-	c.nextLocations = fmt.Sprintf("https://pokeapi.co/api/v2/location-area?offset=%d&limit=%d", 
-									c.locationOffset, 
-									c.locationLimit)
+	c.NextLocations = fmt.Sprintf("https://pokeapi.co/api/v2/location-area?offset=%d&limit=%d", 
+									c.LocationOffset, 
+									c.LocationLimit)
 
 	reader := bufio.NewScanner(os.Stdin)
-	printPrompt()
+	utils.PrintPrompt()
 	for reader.Scan() {
-		text := cleanInput(reader.Text())
+		text := utils.CleanInput(reader.Text())
 		command, exists := cliCommandsTable[text]
 		if exists {
-			err := command.callback(&c)
+			err := command.Callback(&c)
 			if err != nil {
 				fmt.Errorf("Failed to execute command '%s': %w", text, err)
 			}
-			if command.name == "exit" { return }
+			if command.Name == "exit" { return }
 		} else {
-			printUnknown(text)
+			utils.PrintUnknown(text)
 		}
-		printPrompt()
+		utils.PrintPrompt()
 	}
 }

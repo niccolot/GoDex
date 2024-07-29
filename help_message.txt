@@ -19,3 +19,9 @@ Below are the available commands:
     - Description: Displays the names of 20 location areas in the Pokemon world
     - Usage: Type 'map' and press Enter. Each subsequent call to map should display the next 20 locations, and so on. 
         The map command will let us explore the world of Pokemon.
+
+5. mapb
+    - Description: Displays the names of the previous 20 location areas in the Pokemon world
+    - Usage: Type 'mapb' and press Enter. Map-back command. Each subsequent call to mapb should display the previous 20 locations, 
+        and so on. If there are no previous locations it prints an error message. 
+        
