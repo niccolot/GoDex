@@ -1,4 +1,4 @@
-package types
+package main
 
 type CliCommand struct {
 	Name        string

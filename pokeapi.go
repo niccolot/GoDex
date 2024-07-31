@@ -1,4 +1,4 @@
-package pokeapi
+package main
 
 type PokeAPIDataLocations struct {
 	Count    int    `json:"count"`

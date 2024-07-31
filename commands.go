@@ -1,4 +1,4 @@
-package commands
+package main
 
 import (
 	"fmt"
@@ -8,11 +8,9 @@ import (
 	"net/http"
 	"encoding/json"
 	"io"
-	"github.com/niccolot/GoDex/pokeapi"
-	"github.com/niccolot/GoDex/types"
 )
 
-func CommandHelp(c *types.Config) error {
+func CommandHelp(c *Config) error {
 	helpMessagePath := "help_message.txt"
 	file, err := os.Open(helpMessagePath)
 
@@ -38,19 +36,19 @@ func CommandHelp(c *types.Config) error {
 	return nil
 }
 
-func CommandExit(c *types.Config) error {
+func CommandExit(c *Config) error {
 
 	return nil
 }
 
-func CommandClear(c *types.Config) error {
+func CommandClear(c *Config) error {
 	cmd := exec.Command("clear")
 	cmd.Stdout = os.Stdout
 	cmd.Run()
 	return nil
 }
 
-func CommandMap(c *types.Config) error {
+func CommandMap(c *Config) error {
 	locations := c.NextLocations
 	c.PrevLocations = locations
 	c.LocationOffset += c.LocationLimit
@@ -74,7 +72,7 @@ func CommandMap(c *types.Config) error {
 		return errors.New(errorMsg)
 	}
 
-	data := pokeapi.PokeAPIDataLocations{}
+	data := PokeAPIDataLocations{}
 	errUnmarshal := json.Unmarshal(body, &data)
 	if errUnmarshal != nil {
 		return errUnmarshal
@@ -85,7 +83,7 @@ func CommandMap(c *types.Config) error {
 	return nil
 }
 
-func CommandMapb(c *types.Config) error {
+func CommandMapb(c *Config) error {
 	locations := c.PrevLocations
 	if locations == "" {
 		return errors.New("No previous locations")
@@ -122,7 +120,7 @@ func PrintLocations(locations string) error {
 		return errors.New(errorMsg)
 	}
 
-	data := pokeapi.PokeAPIDataLocations{}
+	data := PokeAPIDataLocations{}
 	errUnmarshal := json.Unmarshal(body, &data)
 	if errUnmarshal != nil {
 		return errUnmarshal
