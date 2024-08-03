@@ -11,4 +11,5 @@ type Config struct {
 	LocationOffset int
 	PrevLocations string
 	NextLocations string
+	CurrLocations string
 }

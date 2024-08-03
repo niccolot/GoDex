@@ -50,37 +50,15 @@ func CommandClear(c *Config) error {
 
 func CommandMap(c *Config) error {
 	locations := c.NextLocations
-	c.PrevLocations = locations
+	c.PrevLocations = c.CurrLocations
+	c.CurrLocations = c.NextLocations
 	c.LocationOffset += c.LocationLimit
 	c.NextLocations = fmt.Sprintf("https://pokeapi.co/api/v2/location-area?offset=%d&limit=%d", 
 									c.LocationOffset, 
 									c.LocationLimit)
-	res, err := http.Get(locations)
-	if err != nil {
-		return err
-	}
-	
-	body, err := io.ReadAll(res.Body)
-	if err != nil {
-		return err
-	}
-	
-	defer res.Body.Close()
+	err := PrintLocations(locations)
 
-	if res.StatusCode > 299 {
-		errorMsg := fmt.Sprintf("Response failed with status code %d\n", res.StatusCode)
-		return errors.New(errorMsg)
-	}
-
-	data := PokeAPIDataLocations{}
-	errUnmarshal := json.Unmarshal(body, &data)
-	if errUnmarshal != nil {
-		return errUnmarshal
-	}
-
-	fmt.Print(data.Results[0])
-
-	return nil
+	return err
 }
 
 func CommandMapb(c *Config) error {
@@ -88,14 +66,17 @@ func CommandMapb(c *Config) error {
 	if locations == "" {
 		return errors.New("No previous locations")
 	}
-	c.NextLocations = locations
+	c.NextLocations = c.CurrLocations
+	c.CurrLocations = c.PrevLocations
 	c.LocationOffset -= c.LocationLimit
 	if c.LocationOffset < 0 {
 		c.LocationOffset = 0
+		c.PrevLocations = ""
+	} else {
+		c.PrevLocations = fmt.Sprintf("https://pokeapi.co/api/v2/location-area?offset=%d&limit=%d", 
+										c.LocationOffset, 
+										c.LocationLimit)
 	}
-	c.PrevLocations = fmt.Sprintf("https://pokeapi.co/api/v2/location-area?offset=%d&limit=%d", 
-									c.LocationOffset, 
-									c.LocationLimit)
 	
 	err := PrintLocations(locations)
 

@@ -41,8 +41,12 @@ func main() {
 		LocationOffset: 0,
 		PrevLocations: "",
 	}
-	c.NextLocations = fmt.Sprintf("https://pokeapi.co/api/v2/location-area?offset=%d&limit=%d", 
+	c.CurrLocations = fmt.Sprintf("https://pokeapi.co/api/v2/location-area?offset=%d&limit=%d", 
 									c.LocationOffset, 
+									c.LocationLimit)
+									
+	c.NextLocations = fmt.Sprintf("https://pokeapi.co/api/v2/location-area?offset=%d&limit=%d", 
+									c.LocationOffset + c.LocationLimit, 
 									c.LocationLimit)
 
 	reader := bufio.NewScanner(os.Stdin)
