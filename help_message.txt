@@ -25,7 +25,7 @@ Below are the available commands:
     - Usage: Type 'mapb' and press Enter. Map-back command. Each subsequent call to mapb should display the previous 20 locations, 
         and so on. If there are no previous locations it prints an error message. 
 
-5. history
+6. history
     - Description: Displays the used commands
     - Usage: Type 'history' and press Enter.
         
