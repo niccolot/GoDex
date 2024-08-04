@@ -7,9 +7,7 @@ type CliCommand struct {
 }
 
 type Config struct {
-	//LocationLimit int
-	//LocationOffset int
 	PrevLocations string
 	NextLocations string
-	//CurrLocations string
+	History []string
 }

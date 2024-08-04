@@ -103,3 +103,12 @@ func PrintLocations(c *Config, locations string) (next string, prev string, err 
 
 	return next, prev, nil
 }
+
+func CommandHisotry(c *Config) error {
+
+	for _, entry := range c.History {
+		fmt.Println(entry)
+	}
+
+	return nil
+}
