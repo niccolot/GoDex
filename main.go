@@ -40,14 +40,13 @@ func main() {
 		LocationLimit: 10,
 		LocationOffset: 0,
 		PrevLocations: "",
+		CurrLocations: "",
 	}
-	c.CurrLocations = fmt.Sprintf("https://pokeapi.co/api/v2/location-area?offset=%d&limit=%d", 
+	c.NextLocations = fmt.Sprintf("https://pokeapi.co/api/v2/location-area?offset=%d&limit=%d", 
 									c.LocationOffset, 
 									c.LocationLimit)
-									
-	c.NextLocations = fmt.Sprintf("https://pokeapi.co/api/v2/location-area?offset=%d&limit=%d", 
-									c.LocationOffset + c.LocationLimit, 
-									c.LocationLimit)
+
+	//c.NextLocations = c.CurrLocations
 
 	reader := bufio.NewScanner(os.Stdin)
 	PrintPrompt()
@@ -57,7 +56,7 @@ func main() {
 		if exists {
 			err := command.Callback(&c)
 			if err != nil {
-				fmt.Errorf("Failed to execute command '%s': %w", text, err)
+				fmt.Println(fmt.Errorf("Failed to execute command '%s': %w", text, err).Error())
 			}
 			if command.Name == "exit" { return }
 		} else {

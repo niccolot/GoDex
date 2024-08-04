@@ -49,6 +49,10 @@ func CommandClear(c *Config) error {
 }
 
 func CommandMap(c *Config) error {
+	fmt.Printf("\n\nMAP Offset before: %d\n", c.LocationOffset)
+	fmt.Printf("MAP prev locations before: %s\n", c.PrevLocations)
+	fmt.Printf("MAP curr locations before: %s\n", c.CurrLocations)
+	fmt.Printf("MAP  next locations before: %s\n", c.NextLocations)
 	locations := c.NextLocations
 	c.PrevLocations = c.CurrLocations
 	c.CurrLocations = c.NextLocations
@@ -56,15 +60,23 @@ func CommandMap(c *Config) error {
 	c.NextLocations = fmt.Sprintf("https://pokeapi.co/api/v2/location-area?offset=%d&limit=%d", 
 									c.LocationOffset, 
 									c.LocationLimit)
+	fmt.Printf("\n\nMAP Offset after: %d\n", c.LocationOffset)
+	fmt.Printf("MAP prev locations after: %s\n", c.PrevLocations)
+	fmt.Printf("MAP curr locations after: %s\n", c.CurrLocations)
+	fmt.Printf("MAP  next locations after: %s\n\n", c.NextLocations)
 	err := PrintLocations(locations)
 
 	return err
 }
 
 func CommandMapb(c *Config) error {
+	fmt.Printf("\n\nMAPB Offset before: %d\n", c.LocationOffset)
+	fmt.Printf("MAPB prev locations before: %s\n", c.PrevLocations)
+	fmt.Printf("MAPB curr locations before: %s\n", c.CurrLocations)
+	fmt.Printf("MAPB  next locations before: %s\n", c.NextLocations)
 	locations := c.PrevLocations
 	if locations == "" {
-		return errors.New("No previous locations")
+		return errors.New("no previous locations")
 	}
 	c.NextLocations = c.CurrLocations
 	c.CurrLocations = c.PrevLocations
@@ -72,12 +84,16 @@ func CommandMapb(c *Config) error {
 	if c.LocationOffset < 0 {
 		c.LocationOffset = 0
 		c.PrevLocations = ""
+		c.CurrLocations = ""
 	} else {
 		c.PrevLocations = fmt.Sprintf("https://pokeapi.co/api/v2/location-area?offset=%d&limit=%d", 
 										c.LocationOffset, 
 										c.LocationLimit)
 	}
-	
+	fmt.Printf("\n\nMAPB Offset after: %d\n", c.LocationOffset)
+	fmt.Printf("MAPB prev locations after: %s\n", c.PrevLocations)
+	fmt.Printf("MAPB curr locations after: %s\n", c.CurrLocations)
+	fmt.Printf("MAPB  next locations after: %s\n\n", c.NextLocations)
 	err := PrintLocations(locations)
 
 	return err
