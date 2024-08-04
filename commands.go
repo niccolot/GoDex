@@ -49,81 +49,57 @@ func CommandClear(c *Config) error {
 }
 
 func CommandMap(c *Config) error {
-	fmt.Printf("\n\nMAP Offset before: %d\n", c.LocationOffset)
-	fmt.Printf("MAP prev locations before: %s\n", c.PrevLocations)
-	fmt.Printf("MAP curr locations before: %s\n", c.CurrLocations)
-	fmt.Printf("MAP  next locations before: %s\n", c.NextLocations)
 	locations := c.NextLocations
-	c.PrevLocations = c.CurrLocations
-	c.CurrLocations = c.NextLocations
-	c.LocationOffset += c.LocationLimit
-	c.NextLocations = fmt.Sprintf("https://pokeapi.co/api/v2/location-area?offset=%d&limit=%d", 
-									c.LocationOffset, 
-									c.LocationLimit)
-	fmt.Printf("\n\nMAP Offset after: %d\n", c.LocationOffset)
-	fmt.Printf("MAP prev locations after: %s\n", c.PrevLocations)
-	fmt.Printf("MAP curr locations after: %s\n", c.CurrLocations)
-	fmt.Printf("MAP  next locations after: %s\n\n", c.NextLocations)
-	err := PrintLocations(locations)
+	next, prev, err := PrintLocations(c, locations)
+	c.NextLocations = next
+	c.PrevLocations = prev
 
 	return err
 }
 
 func CommandMapb(c *Config) error {
-	fmt.Printf("\n\nMAPB Offset before: %d\n", c.LocationOffset)
-	fmt.Printf("MAPB prev locations before: %s\n", c.PrevLocations)
-	fmt.Printf("MAPB curr locations before: %s\n", c.CurrLocations)
-	fmt.Printf("MAPB  next locations before: %s\n", c.NextLocations)
 	locations := c.PrevLocations
 	if locations == "" {
 		return errors.New("no previous locations")
 	}
-	c.NextLocations = c.CurrLocations
-	c.CurrLocations = c.PrevLocations
-	c.LocationOffset -= c.LocationLimit
-	if c.LocationOffset < 0 {
-		c.LocationOffset = 0
-		c.PrevLocations = ""
-		c.CurrLocations = ""
-	} else {
-		c.PrevLocations = fmt.Sprintf("https://pokeapi.co/api/v2/location-area?offset=%d&limit=%d", 
-										c.LocationOffset, 
-										c.LocationLimit)
-	}
-	fmt.Printf("\n\nMAPB Offset after: %d\n", c.LocationOffset)
-	fmt.Printf("MAPB prev locations after: %s\n", c.PrevLocations)
-	fmt.Printf("MAPB curr locations after: %s\n", c.CurrLocations)
-	fmt.Printf("MAPB  next locations after: %s\n\n", c.NextLocations)
-	err := PrintLocations(locations)
+	next, prev, err := PrintLocations(c, locations)
+	c.NextLocations = next
+	c.PrevLocations = prev
 
 	return err
 }
 
-func PrintLocations(locations string) error {
+func PrintLocations(c *Config, locations string) (next string, prev string, err error) {
 	res, err := http.Get(locations)
 	if err != nil {
-		return err
+		return c.NextLocations, c.PrevLocations, err
 	}
 	
 	body, err := io.ReadAll(res.Body)
 	if err != nil {
-		return err
+		return c.NextLocations, c.PrevLocations, err
 	}
 	
 	defer res.Body.Close()
 
 	if res.StatusCode > 299 {
 		errorMsg := fmt.Sprintf("Response failed with status code %d\n", res.StatusCode)
-		return errors.New(errorMsg)
+		return c.NextLocations, c.PrevLocations, errors.New(errorMsg)
 	}
 
 	data := PokeAPIDataLocations{}
 	errUnmarshal := json.Unmarshal(body, &data)
 	if errUnmarshal != nil {
-		return errUnmarshal
+		return c.NextLocations, c.PrevLocations, errUnmarshal
 	}
 
 	fmt.Print(data.Results[0])
+	next = data.Next
+	if data.Previous == nil {
+		prev = ""
+	} else {
+		prev = *(data.Previous)
+	}
 
-	return nil
+	return next, prev, nil
 }

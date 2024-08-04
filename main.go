@@ -37,16 +37,9 @@ func main() {
 	}
 
 	c := Config{
-		LocationLimit: 10,
-		LocationOffset: 0,
 		PrevLocations: "",
-		CurrLocations: "",
+		NextLocations: "https://pokeapi.co/api/v2/location-area",
 	}
-	c.NextLocations = fmt.Sprintf("https://pokeapi.co/api/v2/location-area?offset=%d&limit=%d", 
-									c.LocationOffset, 
-									c.LocationLimit)
-
-	//c.NextLocations = c.CurrLocations
 
 	reader := bufio.NewScanner(os.Stdin)
 	PrintPrompt()
