@@ -43,6 +43,11 @@ func getCliCommandsTable() map[string]CliCommand {
 			Description: "Displays the Names of the previous 20 location areas in the Pokemon world",
 			Callback: CommandMapb,
 		},
+		"history": {
+			Name: "history",
+			Description: "Displays the used commands",
+			Callback: CommandHistory,
+		},
 	}
 	
 	return table

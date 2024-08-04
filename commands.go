@@ -93,7 +93,11 @@ func PrintLocations(c *Config, locations string) (next string, prev string, err 
 		return c.NextLocations, c.PrevLocations, errUnmarshal
 	}
 
-	fmt.Print(data.Results[0])
+	//fmt.Print(data.Results[0])
+	for _, entry := range data.Results {
+		fmt.Println(entry.Name)
+	}
+
 	next = data.Next
 	if data.Previous == nil {
 		prev = ""
@@ -104,7 +108,7 @@ func PrintLocations(c *Config, locations string) (next string, prev string, err 
 	return next, prev, nil
 }
 
-func CommandHisotry(c *Config) error {
+func CommandHistory(c *Config) error {
 
 	for _, entry := range c.History {
 		fmt.Println(entry)
