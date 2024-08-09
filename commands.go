@@ -93,7 +93,6 @@ func PrintLocations(c *Config, locations string) (next string, prev string, err 
 		return c.NextLocations, c.PrevLocations, errUnmarshal
 	}
 
-	//fmt.Print(data.Results[0])
 	for _, entry := range data.Results {
 		fmt.Println(entry.Name)
 	}
