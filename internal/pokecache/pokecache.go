@@ -6,27 +6,28 @@ import (
 )
 
 
-type cacheEntry struct {
-	createdAt time.Time
-	val []byte
+type CacheEntry struct {
+	CreatedAt time.Time
+	Val []byte
 }
 
 type Cache struct {
-	cacheMap map[string]cacheEntry
+	CacheMap map[string]CacheEntry
 	mu sync.RWMutex
 	interval time.Duration
 }
 
-func NewCache(interval int) *Cache {
+func NewCache(interval time.Duration) *Cache {
 	/*
 	* @param interval (int): maximum time of persistance of the elements
-	* 	in the cache expressed in seconds
+	* 	in the cache 
 	*
-	* @return: the new cachestruct 
+	* @return: the new pointer to cache struct 
 	*/
 	c := new(Cache)
-	c.interval = time.Duration(interval)
-	c.cacheMap = make(map[string]cacheEntry, 10)
+	//c.interval = time.Duration(interval)
+	c.interval = interval
+	c.CacheMap = make(map[string]CacheEntry, 10)
 	go c.ReapLoop()
 
 	return c
@@ -35,33 +36,32 @@ func NewCache(interval int) *Cache {
 func (c *Cache) Add(key string, val []byte) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	entry := cacheEntry{createdAt: time.Now(), val : val}
-	c.cacheMap[key] = entry
+	entry := CacheEntry{CreatedAt: time.Now(), Val : val}
+	c.CacheMap[key] = entry
 }
 
 func (c *Cache) Get(key string) (val []byte, found bool) {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
-	entry, found := c.cacheMap[key]
-	val = entry.val
+	entry, found := c.CacheMap[key]
+	val = entry.Val
 
 	return val, found
 }
 
 func (c *Cache) ReapLoop() {
-	ticker := time.NewTicker(c.interval * 1000 * time.Millisecond)
+	ticker := time.NewTicker(c.interval)
 	for {
-		_, ok :=  <- ticker.C
-		if  ok {
-			for key, entry := range c.cacheMap {
-				expirationTime := entry.createdAt.Add(c.interval)
-				currentTime := time.Now()
+		<-ticker.C
+		
+		// for the delete operation
+    	c.mu.Lock() 
 
-				// check if current time is after eviction time
-				if currentTime.After(expirationTime) {
-					delete(c.cacheMap, key)
-				}
-			}	
+		for key, entry := range c.CacheMap {
+			if time.Since(entry.CreatedAt) > c.interval {
+				delete(c.CacheMap, key)
+			}
 		}
+		c.mu.Unlock()
 	}
 }

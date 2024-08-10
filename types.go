@@ -1,5 +1,9 @@
 package main
 
+import (
+	"github.com/niccolot/GoDex/internal/pokecache"
+)
+
 type CliCommand struct {
 	Name        string
 	Description string
@@ -10,4 +14,5 @@ type Config struct {
 	PrevLocations string
 	NextLocations string
 	History []string
+	PokeCache pokecache.Cache
 }

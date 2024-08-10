@@ -3,6 +3,8 @@ package main
 import (
 	"fmt"
 	"strings"
+	"time"
+	"github.com/niccolot/GoDex/internal/pokecache"
 )
 
 func PrintUnknown(text string) {
@@ -53,12 +55,14 @@ func getCliCommandsTable() map[string]CliCommand {
 	return table
 }
 
-func getInitConfig() Config {
+func getInitConfig() *Config {
+	minutesInCache := 5 * time.Minute
 	config := Config{
 		PrevLocations: "",
 		NextLocations: "https://pokeapi.co/api/v2/location-area",
 		History: make([]string, 10),
+		PokeCache: *pokecache.NewCache(minutesInCache),
 	}
 
-	return config
+	return &config
 }

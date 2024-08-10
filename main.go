@@ -8,7 +8,7 @@ import (
 func main() {
 
 	cliCommandsTable := getCliCommandsTable()
-	c := getInitConfig()
+	c := *getInitConfig()
 
 	line := liner.NewLiner()
 	defer line.Close()
