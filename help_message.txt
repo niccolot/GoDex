@@ -31,5 +31,10 @@ Below are the available commands:
 
 7. explore
     - Description: Displays the pokemons present in a certain area
-    - Usage: Type 'history <area-name>' and press Enter. If none or more that one argument is type it prints an error message
-        
+    - Usage: Type 'history <area-name>' and press Enter. If none or more that one argument is typed it prints an error message
+
+8. catch
+    - Description: Attempts to catch a pokemon based on the pokemon´s base experience level. The highest the base experience level,
+         the less likely will be to catch it
+    - Usage: Type 'catch <pokemon-name>' after having encountered a pokemon with a previous 'explore' command and press Enter. 
+         If none or more that one argument is typed it prints an error message

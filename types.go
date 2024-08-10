@@ -15,4 +15,5 @@ type Config struct {
 	NextLocations string
 	History []string
 	PokeCache pokecache.Cache
+	Pokedex map[string]PokeAPIPokemonInfo
 }

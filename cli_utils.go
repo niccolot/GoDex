@@ -70,6 +70,11 @@ func getCliCommandsTable() map[string]CliCommand {
 			Description: "Displays the pokemons present in a certain area",
 			Callback: CommandExplore,
 		},
+		"catch": {
+			Name: "catch",
+			Description: "Attempt to catch a pokemon",
+			Callback: CommandCatch,
+		},
 	}
 	
 	return table
@@ -80,8 +85,9 @@ func getInitConfig() *Config {
 	config := Config{
 		PrevLocations: "",
 		NextLocations: "https://pokeapi.co/api/v2/location-area",
-		History: make([]string, 10),
+		History: make([]string, 20),
 		PokeCache: *pokecache.NewCache(minutesInCache),
+		Pokedex: make(map[string]PokeAPIPokemonInfo, 10),
 	}
 
 	return &config

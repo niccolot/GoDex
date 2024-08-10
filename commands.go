@@ -5,6 +5,7 @@ import (
 	"errors"
 	"os"
 	"os/exec"
+	"math/rand"
 )
 
 
@@ -35,7 +36,6 @@ func CommandHelp(c *Config, args []string) error {
 }
 
 func CommandExit(c *Config, args []string) error {
-
 	return nil
 }
 
@@ -50,7 +50,7 @@ func CommandClear(c *Config, args []string) error {
 func CommandMap(c *Config, args []string) error {
 	locations := c.NextLocations
 
-	body, err := GetLocationsBody(c, locations)
+	body, err := GetData(c, locations)
 	if err != nil {
 		return err
 	}
@@ -69,7 +69,7 @@ func CommandMapb(c *Config, args []string) error {
 		return errors.New("no previous locations")
 	}
 
-	body, err := GetLocationsBody(c, locations)
+	body, err := GetData(c, locations)
 	if err != nil {
 		return err
 	}
@@ -82,7 +82,6 @@ func CommandMapb(c *Config, args []string) error {
 }
 
 func CommandHistory(c *Config, args []string) error {
-
 	for _, entry := range c.History {
 		fmt.Println(entry)
 	}
@@ -91,7 +90,6 @@ func CommandHistory(c *Config, args []string) error {
 }
 
 func CommandExplore(c *Config, args []string) error {
-
 	if len(args) != 1 {
 		return errors.New("command usage: explore <area-name>")
 	}
@@ -100,7 +98,7 @@ func CommandExplore(c *Config, args []string) error {
 
 	areaURL := fmt.Sprintf("https://pokeapi.co/api/v2/location-area/%s", area)
 
-	body, err := GetPokemons(c, areaURL)
+	body, err := GetData(c, areaURL)
 	if err != nil {
 		return err
 	}
@@ -108,4 +106,36 @@ func CommandExplore(c *Config, args []string) error {
 	err = PrintPokemons(body)
 
 	return err
+}
+
+func CommandCatch(c *Config, args []string) error {
+	if len(args) != 1 {
+		return errors.New("command usage: catch <pokemon-name>")
+	}
+
+	pokemon := args[0]
+
+	_, inPokedex := c.Pokedex[pokemon]
+	if inPokedex {
+		fmt.Printf("%s already in the Pokedex", pokemon)
+		return nil
+	}
+
+	pokemonURL := fmt.Sprintf("https://pokeapi.co/api/v2/pokemon/%s", pokemon)
+	pokemonStruct, err := GetPokemonStruct(pokemonURL)
+	if err != nil {
+		return err
+	}
+	exp := pokemonStruct.BaseExperience
+
+	fmt.Printf("Throwing a pokeball at %s...\n", pokemon)
+	r := rand.Float64()
+	if r > float64(exp)/340.0 {
+		fmt.Printf("%s was caugth and added to the pokedex!", pokemon)
+		c.Pokedex[pokemon] = pokemonStruct
+	} else {
+		fmt.Printf("%s escaped!", pokemon)
+	}
+
+	return nil
 }
