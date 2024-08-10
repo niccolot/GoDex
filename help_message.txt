@@ -28,4 +28,8 @@ Below are the available commands:
 6. history
     - Description: Displays the used commands
     - Usage: Type 'history' and press Enter.
+
+7. explore
+    - Description: Displays the pokemons present in a certain area
+    - Usage: Type 'history <area-name>' and press Enter. If none or more that one argument is type it prints an error message
         

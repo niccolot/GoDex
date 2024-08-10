@@ -24,24 +24,26 @@ func main() {
 			fmt.Println("Error reading line:", err)
 			continue
 		}
+		
+		go line.AppendHistory(input)
+		c.History = append(c.History, input)
 
-		text := CleanInput(input)
-		command, exists := cliCommandsTable[text]
+		commandName, args := ParseInput(input)
+		command, exists := cliCommandsTable[commandName]
 		if exists {
-			err := command.Callback(&c)
+			err := command.Callback(&c, args)
 			if err != nil {
-				fmt.Println(fmt.Errorf("failed to execute command '%s': %w", text, err).Error())
+				fmt.Println(fmt.Errorf("failed to execute command '%s': %w", commandName, err).Error())
 			}
 			if command.Name == "exit" {
 				break
 			}
 		} else {
-			PrintUnknown(text)
+			PrintUnknown(commandName)
 		}
 
-		line.AppendHistory(text)
-		c.History = append(c.History, text)
+		line.AppendHistory(input)
+		c.History = append(c.History, input)
 		fmt.Println()
 	}
-	
 }

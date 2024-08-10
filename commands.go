@@ -5,14 +5,10 @@ import (
 	"errors"
 	"os"
 	"os/exec"
-	"net/http"
-	"encoding/json"
-	"io"
 )
 
-// ################## COMMANDS FUNCTIONS #################
 
-func CommandHelp(c *Config) error {
+func CommandHelp(c *Config, args []string) error {
 	helpMessagePath := "help_message.txt"
 	file, err := os.Open(helpMessagePath)
 
@@ -38,12 +34,12 @@ func CommandHelp(c *Config) error {
 	return nil
 }
 
-func CommandExit(c *Config) error {
+func CommandExit(c *Config, args []string) error {
 
 	return nil
 }
 
-func CommandClear(c *Config) error {
+func CommandClear(c *Config, args []string) error {
 	cmd := exec.Command("clear")
 	cmd.Stdout = os.Stdout
 	cmd.Run()
@@ -51,7 +47,7 @@ func CommandClear(c *Config) error {
 	return nil
 }
 
-func CommandMap(c *Config) error {
+func CommandMap(c *Config, args []string) error {
 	locations := c.NextLocations
 
 	body, err := GetLocationsBody(c, locations)
@@ -66,7 +62,7 @@ func CommandMap(c *Config) error {
 	return err
 }
 
-func CommandMapb(c *Config) error {
+func CommandMapb(c *Config, args []string) error {
 	locations := c.PrevLocations
 
 	if locations == "" {
@@ -85,7 +81,7 @@ func CommandMapb(c *Config) error {
 	return err
 }
 
-func CommandHistory(c *Config) error {
+func CommandHistory(c *Config, args []string) error {
 
 	for _, entry := range c.History {
 		fmt.Println(entry)
@@ -94,96 +90,22 @@ func CommandHistory(c *Config) error {
 	return nil
 }
 
-// ##################### UTILITY FUNCTIONS #################
+func CommandExplore(c *Config, args []string) error {
 
-func GetLocationsBody(c *Config, locations string) (body []byte, err error) {
-	body, found := c.PokeCache.Get(locations)
-	if found {
-
-		return body, nil
-
-	} else {
-		res, err := http.Get(locations)
-		if err != nil {
-			return nil, err
-		}
-		
-		body, err := io.ReadAll(res.Body)
-		if err != nil {
-			return nil, err
-		}
-		
-		defer res.Body.Close()
-
-		if res.StatusCode > 299 {
-			errorMsg := fmt.Sprintf("Response failed with status code %d\n", res.StatusCode)
-			return nil, errors.New(errorMsg)
-		}
-
-		go c.PokeCache.Add(locations, body)
-		
-		return body, nil
-	}
-}
-
-func PrintLocations(c *Config, body []byte) (next string, prev string, err error) {
-	data := PokeAPIDataLocations{}
-	errUnmarshal := json.Unmarshal(body, &data)
-	if errUnmarshal != nil {
-		return c.NextLocations, c.PrevLocations, errUnmarshal
+	if len(args) != 1 {
+		return errors.New("command usage: explore <area-name>")
 	}
 
-	for _, entry := range data.Results {
-		fmt.Println(entry.Name)
-	}
+	area := args[0]
 
-	next = data.Next
-	if data.Previous == nil {
-		prev = ""
-	} else {
-		prev = *(data.Previous)
-	}
+	areaURL := fmt.Sprintf("https://pokeapi.co/api/v2/location-area/%s", area)
 
-	return next, prev, nil
-}
-
-/*
-func PrintLocations(c *Config, locations string) (next string, prev string, err error) {
-	res, err := http.Get(locations)
+	body, err := GetPokemons(c, areaURL)
 	if err != nil {
-		return c.NextLocations, c.PrevLocations, err
-	}
-	
-	body, err := io.ReadAll(res.Body)
-	if err != nil {
-		return c.NextLocations, c.PrevLocations, err
-	}
-	
-	defer res.Body.Close()
-
-	if res.StatusCode > 299 {
-		errorMsg := fmt.Sprintf("Response failed with status code %d\n", res.StatusCode)
-		return c.NextLocations, c.PrevLocations, errors.New(errorMsg)
+		return err
 	}
 
-	data := PokeAPIDataLocations{}
-	errUnmarshal := json.Unmarshal(body, &data)
-	if errUnmarshal != nil {
-		return c.NextLocations, c.PrevLocations, errUnmarshal
-	}
+	err = PrintPokemons(body)
 
-	for _, entry := range data.Results {
-		fmt.Println(entry.Name)
-	}
-
-	next = data.Next
-	if data.Previous == nil {
-		prev = ""
-	} else {
-		prev = *(data.Previous)
-	}
-
-	return next, prev, nil
+	return err
 }
-*/
-
