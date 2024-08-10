@@ -50,7 +50,7 @@ func (c *Cache) Get(key string) (val []byte, found bool) {
 
 func (c *Cache) ReapLoop() {
 	ticker := time.NewTicker(c.interval * 1000 * time.Millisecond)
-	for i := 0; ;i++ {
+	for {
 		_, ok :=  <- ticker.C
 		if  ok {
 			for key, entry := range c.cacheMap {
