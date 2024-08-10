@@ -109,3 +109,25 @@ func GetPokemonStruct(pokemon string) (pokemonStruct PokeAPIPokemonInfo, err err
 
 	return pokemonStruct, nil
 }
+
+func PrintPokemonInfo(pokemon *PokeAPIPokemonInfo) {
+	name := pokemon.Name
+	height := pokemon.Height
+	weight := pokemon.Weight
+	stats := pokemon.Stats
+	types := pokemon.Types
+
+	fmt.Printf("Name: %s\n", name)
+	fmt.Printf("Height: %d\n", height)
+	fmt.Printf("Weight: %d\n", weight)
+	
+	fmt.Println("Stats:")
+	for _, s := range stats {
+		fmt.Printf(" -%s: %d\n", s.Stat.Name, s.BaseStat)
+	}
+	
+	fmt.Println("Types:")
+	for _, t := range types {
+		fmt.Printf(" - %s\n", t.Type.Name)
+	}
+}

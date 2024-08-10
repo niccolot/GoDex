@@ -139,3 +139,19 @@ func CommandCatch(c *Config, args []string) error {
 
 	return nil
 }
+
+func CommandInspect(c *Config, args []string) error {
+	if len(args) != 1 {
+		return errors.New("command usage: catch <pokemon-name>")
+	}
+
+	pokemon := args[0]
+	pokemonStruct, inPokedex := c.Pokedex[pokemon]
+	if !inPokedex {
+		fmt.Printf("%s not found in pokedex, catch it in order to obtain some information on it", pokemon)
+		return nil
+	}
+	PrintPokemonInfo(&pokemonStruct)
+
+	return nil
+}

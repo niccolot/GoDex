@@ -38,3 +38,8 @@ Below are the available commands:
          the less likely will be to catch it
     - Usage: Type 'catch <pokemon-name>' after having encountered a pokemon with a previous 'explore' command and press Enter. 
          If none or more that one argument is typed it prints an error message
+
+9. inspect
+    - Description: Displays informations about a previously catch pokemon. If the pokemon is not in the pokedex an error message is printed
+    - Usage: Type 'inspect <pokemon-name>' after having encountered and catched a pokemon. If none or more that one 
+         argument is typed it prints an error message
