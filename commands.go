@@ -155,3 +155,16 @@ func CommandInspect(c *Config, args []string) error {
 
 	return nil
 }
+
+func CommandPokedex(c *Config, args []string) error {
+	if len(c.Pokedex) == 0 {
+		fmt.Println("The pokedex is empty, go and catch some pokemons!")
+		return nil
+	}
+
+	for key := range c.Pokedex {
+		fmt.Printf("- %s", key)
+	}
+
+	return nil
+}

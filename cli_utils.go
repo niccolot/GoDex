@@ -80,6 +80,11 @@ func getCliCommandsTable() map[string]CliCommand {
 			Description: "Displays information about a previously catch pokemon",
 			Callback: CommandInspect,
 		},
+		"pokedex": {
+			Name: "pokedex",
+			Description: "Displays the pokemons contained in the pokedex",
+			Callback: CommandPokedex,
+		},
 	}
 	
 	return table
