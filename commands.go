@@ -97,15 +97,22 @@ func CommandExplore(c *Config, args []string) error {
 	area := args[0]
 
 	areaURL := fmt.Sprintf("https://pokeapi.co/api/v2/location-area/%s", area)
+	c.CurrLocation = areaURL
 
-	body, err := GetData(c, areaURL)
-	if err != nil {
+	if IsAreaNearby(c, area) {
+		body, err := GetData(c, areaURL)
+		if err != nil {
+			return err
+		}
+
+		err = PrintPokemons(c, body)
+
 		return err
-	}
-
-	err = PrintPokemons(body)
-
-	return err
+	} else {
+		fmt.Println("Only nearby areas can be explored!")
+		fmt.Println("Use the 'map' and 'mapb' commands to move around in the world of pokemon")
+		return nil
+	}	
 }
 
 func CommandCatch(c *Config, args []string) error {
@@ -121,23 +128,47 @@ func CommandCatch(c *Config, args []string) error {
 		return nil
 	}
 
+	if c.CurrLocation == "" {
+		fmt.Println("In order to catch some pokemon you first have to explore some areas!")
+		fmt.Println("Use the command 'explore <area-name>' to find some pokemons")
+
+		return nil
+	}
+
 	pokemonURL := fmt.Sprintf("https://pokeapi.co/api/v2/pokemon/%s", pokemon)
 	pokemonStruct, err := GetPokemonStruct(pokemonURL)
 	if err != nil {
 		return err
 	}
-	exp := pokemonStruct.BaseExperience
 
-	fmt.Printf("Throwing a pokeball at %s...\n", pokemon)
-	r := rand.Float64()
-	if r > float64(exp)/340.0 {
-		fmt.Printf("%s was caugth and added to the pokedex!", pokemon)
-		c.Pokedex[pokemon] = pokemonStruct
-	} else {
-		fmt.Printf("%s escaped!", pokemon)
+	if IsPokemonNearby(c, pokemon) {
+		escaped, _ := c.EscapedPokemons.Get(pokemon)
+		if  escaped {
+			fmt.Printf("%s is still on the run! Try again in a while", pokemon)
+			return nil
+		}
+		
+		exp := pokemonStruct.BaseExperience
+
+		fmt.Printf("Throwing a pokeball at %s...\n", pokemon)
+		r := rand.Float64()
+
+		// 340 listed as maximum base experience level
+		if r > float64(exp)/340.0 {
+			fmt.Printf("%s was caugth and added to the pokedex!", pokemon)
+			c.Pokedex[pokemon] = pokemonStruct
+		} else {
+			go c.EscapedPokemons.Add(pokemon, true)
+			fmt.Printf("%s escaped!", pokemon)
+		}
+		return nil
+	
+		} else {
+			fmt.Println("Only nearby pokemons can be caught!")
+			fmt.Println("Use the command 'explore <area-name>' to list the pokemons near you")
+
+			return nil
 	}
-
-	return nil
 }
 
 func CommandInspect(c *Config, args []string) error {

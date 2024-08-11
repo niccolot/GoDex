@@ -13,7 +13,11 @@ type CliCommand struct {
 type Config struct {
 	PrevLocations string
 	NextLocations string
+	CurrLocation string
+	NearbyPokemons []string
+	ExplorableLocations []string
 	History []string
-	PokeCache pokecache.Cache
+	PokeCache pokecache.Cache[[]byte]
+	EscapedPokemons pokecache.Cache[bool]
 	Pokedex map[string]PokeAPIPokemonInfo
 }

@@ -66,8 +66,9 @@ func PrintLocations(c *Config, body []byte) (next string, prev string, err error
 		return c.NextLocations, c.PrevLocations, errUnmarshal
 	}
 
-	for _, entry := range data.Results {
+	for i, entry := range data.Results {
 		fmt.Println(entry.Name)
+		c.ExplorableLocations[i] = entry.Name
 	}
 
 	next = data.Next
@@ -80,7 +81,7 @@ func PrintLocations(c *Config, body []byte) (next string, prev string, err error
 	return next, prev, nil
 }
 
-func PrintPokemons(body []byte) error {
+func PrintPokemons(c *Config, body []byte) error {
 	data := PokeAPIAreaInfo{}
 	errUnmarshal := json.Unmarshal(body, &data)
 	if errUnmarshal != nil {
@@ -89,8 +90,9 @@ func PrintPokemons(body []byte) error {
 
 	encounters := data.PokemonEncounters
 
-	for _, encounter := range encounters {
+	for i, encounter := range encounters {
 		fmt.Println("- ", encounter.Pokemon.Name)
+		c.NearbyPokemons[i] = encounter.Pokemon.Name
 	}
 
 	return nil
@@ -130,4 +132,26 @@ func PrintPokemonInfo(pokemon *PokeAPIPokemonInfo) {
 	for _, t := range types {
 		fmt.Printf(" - %s\n", t.Type.Name)
 	}
+}
+
+func IsPokemonNearby(c *Config, pokemon string) bool {
+	found := false
+	for _, p := range c.NearbyPokemons {
+		if p == pokemon {
+			found = true
+		}
+	}
+
+	return found
+}
+
+func IsAreaNearby(c *Config, area string) bool {
+	found := false
+	for _, a := range c.ExplorableLocations {
+		if a == area {
+			found = true
+		}
+	}
+
+	return found
 }

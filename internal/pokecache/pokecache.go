@@ -6,41 +6,40 @@ import (
 )
 
 
-type CacheEntry struct {
+type CacheEntry[T any] struct {
 	CreatedAt time.Time
-	Val []byte
+	Val T
 }
 
-type Cache struct {
-	CacheMap map[string]CacheEntry
+type Cache[T any] struct {
+	CacheMap map[string]CacheEntry[T]
 	mu sync.RWMutex
 	interval time.Duration
 }
 
-func NewCache(interval time.Duration) *Cache {
+func NewCache[T any](interval time.Duration) *Cache[T] {
 	/*
 	* @param interval (int): maximum time of persistance of the elements
 	* 	in the cache 
 	*
 	* @return: the new pointer to cache struct 
 	*/
-	c := new(Cache)
-	//c.interval = time.Duration(interval)
+	c := new(Cache[T])
 	c.interval = interval
-	c.CacheMap = make(map[string]CacheEntry, 10)
+	c.CacheMap = make(map[string]CacheEntry[T], 10)
 	go c.ReapLoop()
 
 	return c
 }
 
-func (c *Cache) Add(key string, val []byte) {
+func (c *Cache[T]) Add(key string, val T) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	entry := CacheEntry{CreatedAt: time.Now(), Val : val}
+	entry := CacheEntry[T]{CreatedAt: time.Now(), Val : val}
 	c.CacheMap[key] = entry
 }
 
-func (c *Cache) Get(key string) (val []byte, found bool) {
+func (c *Cache[T]) Get(key string) (val T, found bool) {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
 	entry, found := c.CacheMap[key]
@@ -49,7 +48,7 @@ func (c *Cache) Get(key string) (val []byte, found bool) {
 	return val, found
 }
 
-func (c *Cache) ReapLoop() {
+func (c *Cache[T]) ReapLoop() {
 	ticker := time.NewTicker(c.interval)
 	for {
 		<-ticker.C

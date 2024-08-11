@@ -91,12 +91,17 @@ func getCliCommandsTable() map[string]CliCommand {
 }
 
 func getInitConfig() *Config {
-	minutesInCache := 5 * time.Minute
+	minutesInCacheCommands := 5 * time.Minute
+	minutesEscapedPokemon := 1 * time.Minute
 	config := Config{
 		PrevLocations: "",
 		NextLocations: "https://pokeapi.co/api/v2/location-area",
+		CurrLocation: "",
+		ExplorableLocations: make([]string, 20),
+		NearbyPokemons: make([]string, 20),
 		History: make([]string, 20),
-		PokeCache: *pokecache.NewCache(minutesInCache),
+		PokeCache: *pokecache.NewCache[[]byte](minutesInCacheCommands),
+		EscapedPokemons: *pokecache.NewCache[bool](minutesEscapedPokemon),
 		Pokedex: make(map[string]PokeAPIPokemonInfo, 10),
 	}
 
