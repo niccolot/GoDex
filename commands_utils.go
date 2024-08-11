@@ -98,8 +98,8 @@ func PrintPokemons(c *Config, body []byte) error {
 	return nil
 }
 
-func GetPokemonStruct(pokemon string) (pokemonStruct PokeAPIPokemonInfo, err error) {
-	body, err := GetBodyFromHTTP(pokemon)
+func GetPokemonStruct(c *Config, pokemon string) (pokemonStruct PokeAPIPokemonInfo, err error) {
+	body, err := GetData(c, pokemon)
 	if err != nil {
 		return PokeAPIPokemonInfo{}, err
 	}

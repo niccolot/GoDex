@@ -1,5 +1,11 @@
 package main
 
+
+const (
+	areaURLAPI = "https://pokeapi.co/api/v2/location-area/"
+	pokemonURLAPI = "https://pokeapi.co/api/v2/pokemon/"
+)
+
 // created with https://transform.tools/json-to-go
 type PokeAPIDataLocations struct {
 	Count    int    `json:"count"`

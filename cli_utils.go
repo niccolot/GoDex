@@ -4,8 +4,11 @@ import (
 	"fmt"
 	"strings"
 	"time"
+	"math/rand"
 	"github.com/niccolot/GoDex/internal/pokecache"
+	"github.com/peterh/liner"
 )
+
 
 func PrintUnknown(text string) {
 	fmt.Printf("'%s' command not found", text)
@@ -24,10 +27,7 @@ func ParseInput(text string) (command string, args []string) {
 	
 	parts := strings.Split(lowercasedText, " ")
 
-	// The first part is the command
 	command = parts[0]
-
-	// The rest are the arguments
 	args = parts[1:]
 
 	return command, args
@@ -103,7 +103,122 @@ func getInitConfig() *Config {
 		PokeCache: *pokecache.NewCache[[]byte](minutesInCacheCommands),
 		EscapedPokemons: *pokecache.NewCache[bool](minutesEscapedPokemon),
 		Pokedex: make(map[string]PokeAPIPokemonInfo, 10),
+		Actions: map[string]CliCommand{
+			"escape": {
+				Name: "escape",
+				Description: "Run away from a random encounter",
+				Callback: CommandEscape,
+			},
+			"battle": {
+				Name: "battle",
+				Description: "Fight a pokemon found in a random encounter",
+				Callback: CommandBattle,
+			},
+			"catch": {
+				Name: "catch",
+				Description: "Attempt to catch a pokemon",
+				Callback: CommandCatch,
+			},
+			"exit": {
+				Name: "exit",
+				Description: "Quits the Pokedex CLI application and returns to terminal",
+				Callback: CommandExit,
+			},
+		},
+		EncounteredPokemon: "",
+		BattleActions: map[string]CliCommand{
+			"inspect": {
+				Name: "inspect",
+				Description: "Displays information about a previously catch pokemon",
+				Callback: CommandInspect,
+			},
+			"pokedex": {
+				Name: "pokedex",
+				Description: "Displays the pokemons contained in the pokedex",
+				Callback: CommandPokedex,
+			},
+			"choose": {
+				Name: "choose",
+				Description: "Choose a pokemon to fight with",
+				Callback: CommandChoose,
+			},
+			"exit": {
+				Name: "exit",
+				Description: "Quits the Pokedex CLI application and returns to terminal",
+				Callback: CommandExit,
+			},
+		},
 	}
 
 	return &config
+}
+
+func RandomEncounter(c *Config) error {
+	if rand.Float64() > 0.0 {
+		err := HandleRandomEncounter(c)
+		if err != nil {
+			return err
+		}
+	} 
+
+	return nil
+}
+
+func HandleRandomEncounter(c *Config) error {
+	n := len(c.NearbyPokemons)
+	encounteredPokemon := c.NearbyPokemons[n-1]
+	//encounteredPokemon := c.NearbyPokemons[rand.Intn(len(c.NearbyPokemons))]
+	/*
+	for _, p := range c.NearbyPokemons {
+		fmt.Println(p)
+	}
+	*/
+	
+	fmt.Println()
+	fmt.Printf("A wild %s appears!", encounteredPokemon)
+	fmt.Println()
+	c.EncounteredPokemon = encounteredPokemon
+	fmt.Println("Choose an action:")
+	PrintActions(c)
+
+	line := liner.NewLiner()
+	defer line.Close()
+	line.SetCtrlCAborts(true)
+
+	fmt.Println()
+	input, err := line.Prompt("Pokedex/Encounter > ")
+	if err != nil {
+		return fmt.Errorf("failed reading line: %w", err)
+	}
+
+	go line.AppendHistory(input)
+	c.History = append(c.History, input)
+
+	//input = input + " " + encounteredPokemon
+
+	actionName, args := ParseInput(input)
+	action, exists := c.Actions[actionName]
+	if exists {
+		err := action.Callback(c, args)
+		if err != nil {
+			
+			return fmt.Errorf("failed to execute command '%s': %w", actionName, err) 
+		}
+		if action.Name == "escape" {
+			return nil
+		}
+	} else {
+		PrintUnknown(actionName)
+	}
+
+	return nil
+}
+
+func PrintActions(c *Config) {
+	for action := range c.Actions {
+		if action == "exit" {
+			continue
+		}
+		fmt.Printf("- %s\n", action)
+	}
 }

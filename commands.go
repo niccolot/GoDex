@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/exec"
 	"math/rand"
+	"github.com/peterh/liner"
 )
 
 
@@ -96,7 +97,7 @@ func CommandExplore(c *Config, args []string) error {
 
 	area := args[0]
 
-	areaURL := fmt.Sprintf("https://pokeapi.co/api/v2/location-area/%s", area)
+	areaURL := areaURLAPI + area
 	c.CurrLocation = areaURL
 
 	if IsAreaNearby(c, area) {
@@ -135,8 +136,8 @@ func CommandCatch(c *Config, args []string) error {
 		return nil
 	}
 
-	pokemonURL := fmt.Sprintf("https://pokeapi.co/api/v2/pokemon/%s", pokemon)
-	pokemonStruct, err := GetPokemonStruct(pokemonURL)
+	pokemonURL := pokemonURLAPI + pokemon
+	pokemonStruct, err := GetPokemonStruct(c, pokemonURL)
 	if err != nil {
 		return err
 	}
@@ -147,7 +148,7 @@ func CommandCatch(c *Config, args []string) error {
 			fmt.Printf("%s is still on the run! Try again in a while", pokemon)
 			return nil
 		}
-		
+
 		exp := pokemonStruct.BaseExperience
 
 		fmt.Printf("Throwing a pokeball at %s...\n", pokemon)
@@ -197,5 +198,64 @@ func CommandPokedex(c *Config, args []string) error {
 		fmt.Printf("- %s", key)
 	}
 
+	return nil
+}
+
+func CommandEscape(c *Config, args []string) error {
+	fmt.Println("Escaping...")
+
+	return nil
+}
+
+func CommandBattle(c *Config, args []string) error {
+	if len(c.Pokedex) == 0 {
+		fmt.Println("You need to capture some pokemons in order to fight!")
+		fmt.Println("Escaping...")
+		return nil
+	}
+
+	if len(args) != 1 {
+		return errors.New("command usage: battle <pokemon-name>")
+	}
+
+	pokemon := args[0]
+
+	fmt.Printf("Choose a pokemon to fight with %s", pokemon)
+	fmt.Printf("Enter 'inspect %s' if you have already catch it to check its stats", pokemon)
+	fmt.Println("Enter 'pokedex' to check your pokedex")
+	fmt.Println("Enter 'inspect <pokemon-name>' to check the stats of one of your pokemons")
+	fmt.Printf("Enter 'choose <pokemon-name>' to start the battle with the chosen pokemon")
+
+	line := liner.NewLiner()
+	defer line.Close()
+	line.SetCtrlCAborts(true)
+
+	fmt.Println()
+	input, err := line.Prompt("Pokedex/Battle > ")
+	if err != nil {
+		return fmt.Errorf("failed reading line: %w", err)
+	}
+
+	go line.AppendHistory(input)
+	c.History = append(c.History, input)
+
+	commandName, args := ParseInput(input)
+	command, exists := c.BattleActions[commandName]
+	if exists {
+		err := command.Callback(c, args)
+		if err != nil {
+			fmt.Println(fmt.Errorf("failed to execute command '%s': %w", commandName, err).Error())
+		}
+		if command.Name == "exit" {
+			return nil
+		}
+	} else {
+		PrintUnknown(commandName)
+	}
+
+	return err
+}
+
+func CommandChoose(c *Config, args []string) error {
 	return nil
 }

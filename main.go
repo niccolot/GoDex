@@ -41,9 +41,15 @@ func main() {
 		} else {
 			PrintUnknown(commandName)
 		}
+		
+		// potential random encounter
+		if command.Name == "explore" && len(c.NearbyPokemons) > 0 {
+			err := RandomEncounter(&c)
+			if err != nil {
+				fmt.Println(err.Error())
+			}
+		}
 
-		line.AppendHistory(input)
-		c.History = append(c.History, input)
 		fmt.Println()
 	}
 }
