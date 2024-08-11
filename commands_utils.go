@@ -66,9 +66,10 @@ func PrintLocations(c *Config, body []byte) (next string, prev string, err error
 		return c.NextLocations, c.PrevLocations, errUnmarshal
 	}
 
-	for i, entry := range data.Results {
+	c.ExplorableLocations = nil
+	for _, entry := range data.Results {
 		fmt.Println(entry.Name)
-		c.ExplorableLocations[i] = entry.Name
+		c.ExplorableLocations = append(c.ExplorableLocations, entry.Name)
 	}
 
 	next = data.Next
@@ -90,9 +91,10 @@ func PrintPokemons(c *Config, body []byte) error {
 
 	encounters := data.PokemonEncounters
 
-	for i, encounter := range encounters {
+	c.NearbyPokemons = nil
+	for _, encounter := range encounters {
 		fmt.Println("- ", encounter.Pokemon.Name)
-		c.NearbyPokemons[i] = encounter.Pokemon.Name
+		c.NearbyPokemons = append(c.NearbyPokemons, encounter.Pokemon.Name)
 	}
 
 	return nil
@@ -132,6 +134,27 @@ func PrintPokemonInfo(pokemon *PokeAPIPokemonInfo) {
 	for _, t := range types {
 		fmt.Printf(" - %s\n", t.Type.Name)
 	}
+}
+
+func GetPokemonStats(pokemon *PokeAPIPokemonInfo) PokemonStats{
+	stats := PokemonStats{
+		Name : pokemon.Name,
+		Height : pokemon.Height,
+		Weight : pokemon.Weight,
+		Hp: pokemon.Stats[0].BaseStat,
+		Attack: pokemon.Stats[1].BaseStat,
+		Defense: pokemon.Stats[2].BaseStat,
+		SpecialAttack: pokemon.Stats[3].BaseStat,
+		SpecialDefense: pokemon.Stats[4].BaseStat,
+		Speed: pokemon.Stats[5].BaseStat,
+		Types: make([]string, len(pokemon.Types)),
+	}
+
+	for i, t := range pokemon.Types {
+		stats.Types[i] = t.Type.Name
+	}
+
+	return stats
 }
 
 func IsPokemonNearby(c *Config, pokemon string) bool {

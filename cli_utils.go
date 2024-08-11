@@ -97,12 +97,12 @@ func getInitConfig() *Config {
 		PrevLocations: "",
 		NextLocations: "https://pokeapi.co/api/v2/location-area",
 		CurrLocation: "",
-		ExplorableLocations: make([]string, 20),
-		NearbyPokemons: make([]string, 20),
-		History: make([]string, 20),
+		ExplorableLocations: make([]string, 0),
+		NearbyPokemons: make([]string, 0),
+		History: make([]string, 0),
 		PokeCache: *pokecache.NewCache[[]byte](minutesInCacheCommands),
 		EscapedPokemons: *pokecache.NewCache[bool](minutesEscapedPokemon),
-		Pokedex: make(map[string]PokeAPIPokemonInfo, 10),
+		Pokedex: make(map[string]PokeAPIPokemonInfo),
 		Actions: map[string]CliCommand{
 			"escape": {
 				Name: "escape",
@@ -165,18 +165,8 @@ func RandomEncounter(c *Config) error {
 }
 
 func HandleRandomEncounter(c *Config) error {
-	n := len(c.NearbyPokemons)
-	encounteredPokemon := c.NearbyPokemons[n-1]
-	//encounteredPokemon := c.NearbyPokemons[rand.Intn(len(c.NearbyPokemons))]
-	/*
-	for _, p := range c.NearbyPokemons {
-		fmt.Println(p)
-	}
-	*/
-	
-	fmt.Println()
-	fmt.Printf("A wild %s appears!", encounteredPokemon)
-	fmt.Println()
+	encounteredPokemon := c.NearbyPokemons[rand.Intn(len(c.NearbyPokemons))]
+	fmt.Printf("\nA wild %s appears!\n", encounteredPokemon)
 	c.EncounteredPokemon = encounteredPokemon
 	fmt.Println("Choose an action:")
 	PrintActions(c)
@@ -185,32 +175,35 @@ func HandleRandomEncounter(c *Config) error {
 	defer line.Close()
 	line.SetCtrlCAborts(true)
 
-	fmt.Println()
-	input, err := line.Prompt("Pokedex/Encounter > ")
-	if err != nil {
-		return fmt.Errorf("failed reading line: %w", err)
-	}
-
-	go line.AppendHistory(input)
-	c.History = append(c.History, input)
-
-	//input = input + " " + encounteredPokemon
-
-	actionName, args := ParseInput(input)
-	action, exists := c.Actions[actionName]
-	if exists {
-		err := action.Callback(c, args)
+	for {
+		fmt.Println()
+		input, err := line.Prompt("Pokedex/Encounter > ")
 		if err != nil {
-			
-			return fmt.Errorf("failed to execute command '%s': %w", actionName, err) 
+			return fmt.Errorf("failed reading line: %w", err)
 		}
-		if action.Name == "escape" {
-			return nil
-		}
-	} else {
-		PrintUnknown(actionName)
-	}
 
+		go line.AppendHistory(input)
+		c.History = append(c.History, input)
+
+		input = input + " " + encounteredPokemon
+
+		actionName, args := ParseInput(input)
+		action, exists := c.Actions[actionName]
+		if exists {
+			err := action.Callback(c, args)
+			if err != nil {
+				
+				fmt.Println(fmt.Errorf("failed to execute command '%s': %w", actionName, err).Error()) 
+			}
+			if action.Name == "escape" || action.Name == "exit"{
+				break
+			}
+		} else {
+			PrintUnknown(actionName)
+		}
+		fmt.Println()
+	}
+	
 	return nil
 }
 

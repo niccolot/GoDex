@@ -117,7 +117,7 @@ func CommandExplore(c *Config, args []string) error {
 }
 
 func CommandCatch(c *Config, args []string) error {
-	if len(args) != 1 {
+	if len(args) < 1 {
 		return errors.New("command usage: catch <pokemon-name>")
 	}
 
@@ -162,14 +162,12 @@ func CommandCatch(c *Config, args []string) error {
 			go c.EscapedPokemons.Add(pokemon, true)
 			fmt.Printf("%s escaped!", pokemon)
 		}
-		return nil
 	
-		} else {
-			fmt.Println("Only nearby pokemons can be caught!")
-			fmt.Println("Use the command 'explore <area-name>' to list the pokemons near you")
-
-			return nil
+	} else {
+		fmt.Println("Only nearby pokemons can be caught!")
+		fmt.Println("Use the command 'explore <area-name>' to list the pokemons near you")
 	}
+	return nil
 }
 
 func CommandInspect(c *Config, args []string) error {
@@ -214,7 +212,7 @@ func CommandBattle(c *Config, args []string) error {
 		return nil
 	}
 
-	if len(args) != 1 {
+	if len(args) < 1 {
 		return errors.New("command usage: battle <pokemon-name>")
 	}
 
@@ -229,33 +227,96 @@ func CommandBattle(c *Config, args []string) error {
 	line := liner.NewLiner()
 	defer line.Close()
 	line.SetCtrlCAborts(true)
-
-	fmt.Println()
-	input, err := line.Prompt("Pokedex/Battle > ")
-	if err != nil {
-		return fmt.Errorf("failed reading line: %w", err)
-	}
-
-	go line.AppendHistory(input)
-	c.History = append(c.History, input)
-
-	commandName, args := ParseInput(input)
-	command, exists := c.BattleActions[commandName]
-	if exists {
-		err := command.Callback(c, args)
+	for {
+		fmt.Println()
+		input, err := line.Prompt("Pokedex/Battle > ")
 		if err != nil {
-			fmt.Println(fmt.Errorf("failed to execute command '%s': %w", commandName, err).Error())
+			return fmt.Errorf("failed reading line: %w", err)
 		}
-		if command.Name == "exit" {
-			return nil
-		}
-	} else {
-		PrintUnknown(commandName)
-	}
 
-	return err
+		go line.AppendHistory(input)
+		c.History = append(c.History, input)
+
+		commandName, args := ParseInput(input)
+		command, exists := c.BattleActions[commandName]
+		if exists {
+			err := command.Callback(c, args)
+			if err != nil {
+				fmt.Println(fmt.Errorf("failed to execute command '%s': %w", commandName, err).Error())
+			}
+			if command.Name == "exit" {
+				break
+			}
+		} else {
+			PrintUnknown(commandName)
+		}
+		fmt.Println()
+	}
+	
+	return nil
 }
 
 func CommandChoose(c *Config, args []string) error {
+	if len(args) != 1 {
+		return errors.New("command usage: choose <pokemon-name>")
+	}
+	
+	playerPokemonName := args[0]
+
+	adversaryPokemon, err := GetPokemonStruct(c, c.EncounteredPokemon)
+	if err != nil {
+		return err
+	}
+
+	playerPokemon, err := GetPokemonStruct(c, playerPokemonName)
+	if err != nil {
+		return err
+	}
+	
+	playerStats := GetPokemonStats(&playerPokemon)
+	adversaryStats := GetPokemonStats(&adversaryPokemon)
+
+	playerHp := playerStats.Hp
+	adversaryHp := adversaryStats.Hp
+	playerAttack := playerStats.Attack
+	adversaryAttack := adversaryStats.Attack
+	playerDefense := playerStats.Defense
+	adversaryDefense := adversaryStats.Defense
+
+	damageToAdversary := playerAttack - adversaryDefense
+	if damageToAdversary < 0 {
+		damageToAdversary = 0
+	}
+
+	damageToPlayer := adversaryAttack - playerDefense
+	if damageToPlayer < 0 {
+		damageToPlayer = 0
+	}
+
+	playerHp -= damageToPlayer
+	adversaryHp -= damageToAdversary
+
+	fmt.Printf("%s attacks %s for %d damage points", playerPokemonName, c.EncounteredPokemon, damageToAdversary)
+	if adversaryHp < 0 {
+		fmt.Printf("%s is stunned and got catched!", c.EncounteredPokemon)
+		c.Pokedex[c.EncounteredPokemon] = adversaryPokemon
+
+		return nil
+	}
+
+	fmt.Printf("%s attacks %s for %d damage points", c.EncounteredPokemon, playerPokemonName, damageToPlayer)
+	if playerHp < 0 {
+		fmt.Printf("%s is stunned and got removed from the pokedex!", playerPokemonName)
+		delete(c.Pokedex, playerPokemonName)
+
+		return nil
+	}
+
+	if playerHp > adversaryHp {
+		fmt.Printf("%s won! %s escapes scared", playerPokemonName, c.EncounteredPokemon)
+	} else {
+		fmt.Printf("%s loses! Better escape while you can", playerPokemonName)
+	}
+
 	return nil
 }

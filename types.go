@@ -24,3 +24,16 @@ type Config struct {
 	EncounteredPokemon string
 	BattleActions map[string]CliCommand
 }
+
+type PokemonStats struct {
+	Name string
+	Height int
+	Weight int
+	Hp int
+	Attack int
+	Defense int
+	SpecialAttack int 
+	SpecialDefense int
+	Speed int
+	Types []string
+}
