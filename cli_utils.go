@@ -164,7 +164,7 @@ func getInitConfig() *Config {
 }
 
 func RandomEncounter(c *Config) error {
-	if rand.Float64() > 0.0 {
+	if rand.Float64() > 0.5 {
 		err := HandleRandomEncounter(c)
 		if err != nil {
 			return err

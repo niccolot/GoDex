@@ -12,7 +12,7 @@ import (
 
 
 func CommandHelp(c *Config, args []string) error {
-	helpMessagePath := "help_message.txt"
+	helpMessagePath := "assets/help_message.txt"
 	file, err := os.Open(helpMessagePath)
 
 	if err != nil {
