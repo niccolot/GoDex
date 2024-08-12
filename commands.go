@@ -1,11 +1,12 @@
 package main
 
 import (
-	"fmt"
 	"errors"
+	"fmt"
+	"math/rand"
 	"os"
 	"os/exec"
-	"math/rand"
+	"time"
 	"github.com/peterh/liner"
 )
 
@@ -316,6 +317,91 @@ func CommandChoose(c *Config, args []string) error {
 		fmt.Printf("%s won! %s escapes scared", playerPokemonName, c.EncounteredPokemon)
 	} else {
 		fmt.Printf("%s loses! Better escape while you can", playerPokemonName)
+	}
+
+	return nil
+}
+
+func CommandSave(c *Config, args []string) error {
+	// Check if 'saves' folder exists
+	_, err := os.Stat("saves")
+	if os.IsNotExist(err) {
+		err := os.Mkdir("saves", os.ModePerm)
+		if err != nil {
+			return fmt.Errorf("failed to create folder: %v", err)
+		}
+		fmt.Println("Created folder 'saves'")
+	} else if err != nil {
+		// Some other error occurred while checking the folder
+		return fmt.Errorf("failed to check folder existence: %v", err)
+	}
+
+	currentTime := time.Now()
+
+	// Format the time as "day_month_year_hour-minute"
+	folderName := currentTime.Format("02_01_2006_15-04")
+	path := "saves/" + folderName
+	filePath := path + ".json"
+
+	err = SaveMapAsJSON(filePath, c.Pokedex)
+
+	return err
+}
+
+func CommandLoad(c *Config, args []string) error {
+	// Check if 'saves' folder exists
+	_, err := os.Stat("saves")
+	if os.IsNotExist(err) {
+		return fmt.Errorf("'saves' not found")
+	}
+
+	empty, err := IsFolderEmpty("saves")
+	if err != nil {
+		return err
+	}
+	if empty {
+		fmt.Println("'saves' folder is empty")
+		return nil
+	} else {
+		saves, err := GetFiles("saves")
+		if err != nil {
+			return err
+		}
+
+		fmt.Println("Enter one of the saved files: ")
+		for _, save := range saves {
+			fmt.Printf("- %s\n", save)
+		}
+
+		line := liner.NewLiner()
+		defer line.Close()
+		line.SetCtrlCAborts(true)
+		for {
+			fmt.Println()
+			input, err := line.Prompt("Pokedex/Load > ")
+			if err != nil {
+				return fmt.Errorf("failed reading line: %w", err)
+			}
+	
+			file, _ := ParseInput(input)
+			if file == "exit" {
+				break
+			}
+			exists := Contains(saves, file)
+			if exists {
+				filePath := "saves/" + file
+				data, err := LoadMapFromJSON(filePath)
+				if err != nil {
+					return fmt.Errorf("failed to load %s file: %w", filePath, err)
+				}
+				c.Pokedex = data
+				fmt.Println("Saved file loaded succesfully")
+				break
+			} else {
+				fmt.Printf("Invalid choice")
+			}
+			fmt.Println()
+		}
 	}
 
 	return nil

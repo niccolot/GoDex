@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"encoding/json"
 	"io"
+	"os"
 )
 
 
@@ -177,4 +178,89 @@ func IsAreaNearby(c *Config, area string) bool {
 	}
 
 	return found
+}
+
+func SaveMapAsJSON(filename string, data map[string]PokeAPIPokemonInfo) error {
+	/*
+	* @param filename (string): name of the JSON file that will be created, .json extension needed in the name
+	* @param data (map[string]PokeAPIPokemonInfo): player's pokedex 
+	*/
+
+	jsonData, err := json.MarshalIndent(data, "", "  ")
+	if err != nil {
+		return fmt.Errorf("failed to marshal map: %v", err)
+	}
+
+	file, err := os.Create(filename)
+	if err != nil {
+		return fmt.Errorf("failed to create file: %v", err)
+	}
+	defer file.Close()
+
+	_, err = file.Write(jsonData)
+	if err != nil {
+		return fmt.Errorf("failed to write to file: %v", err)
+	}
+
+	return nil
+}
+
+func IsFolderEmpty(folderPath string) (bool, error) {
+	f, err := os.Open(folderPath)
+	if err != nil {
+		return false, fmt.Errorf("failed to open folder: %v", err)
+	}
+	defer f.Close()
+
+	contents, err := f.Readdirnames(1) // Only read one item so it´ more efficient
+	if err != nil {
+		return false, fmt.Errorf("failed to read folder contents: %v", err)
+	}
+
+	if len(contents) == 0 {
+		return true, nil
+	}
+	return false, nil
+}
+
+func LoadMapFromJSON(filepath string) (data map[string]PokeAPIPokemonInfo, err error) {
+	data = make(map[string]PokeAPIPokemonInfo)
+	byteValue, err := os.ReadFile(filepath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read file: %v", err)
+	}
+
+	errUnmarshal := json.Unmarshal(byteValue, &data)
+	if errUnmarshal != nil {
+		return nil, errUnmarshal
+	}
+
+	return data, nil
+}
+
+func GetFiles(folderPath string) ([]string, error) {
+	var files []string
+
+	entries, err := os.ReadDir(folderPath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read directory: %v", err)
+	}
+
+	for _, entry := range entries {
+		if !entry.IsDir() {
+			files = append(files, entry.Name())
+		}
+	}
+
+	return files, nil
+}
+
+func Contains(slice []string, str string) bool {
+	for _, s := range slice {
+		if s == str {
+			return true
+		}
+	}
+
+	return false
 }

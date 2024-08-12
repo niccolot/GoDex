@@ -85,6 +85,16 @@ func getCliCommandsTable() map[string]CliCommand {
 			Description: "Displays the pokemons contained in the pokedex",
 			Callback: CommandPokedex,
 		},
+		"save": {
+			Name: "save",
+			Description: "Saves the progress inside a 'saves' folder",
+			Callback: CommandSave,
+		},
+		"load": {
+			Name: "load",
+			Description: "Loads some previously saved data",
+			Callback: CommandLoad,
+		},
 	}
 	
 	return table
