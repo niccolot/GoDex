@@ -113,7 +113,7 @@ func getInitConfig() *Config {
 		PokeCache: *pokecache.NewCache[[]byte](minutesInCacheCommands),
 		EscapedPokemons: *pokecache.NewCache[bool](minutesEscapedPokemon),
 		Pokedex: make(map[string]PokeAPIPokemonInfo),
-		Actions: map[string]CliCommand{
+		EncounterActions: map[string]CliCommand{
 			"escape": {
 				Name: "escape",
 				Description: "Run away from a random encounter",
@@ -192,13 +192,13 @@ func HandleRandomEncounter(c *Config) error {
 			return fmt.Errorf("failed reading line: %w", err)
 		}
 
-		go line.AppendHistory(input)
+		line.AppendHistory(input)
 		c.History = append(c.History, input)
 
 		input = input + " " + encounteredPokemon
 
 		actionName, args := ParseInput(input)
-		action, exists := c.Actions[actionName]
+		action, exists := c.EncounterActions[actionName]
 		if exists {
 			err := action.Callback(c, args)
 			if err != nil {
@@ -218,7 +218,7 @@ func HandleRandomEncounter(c *Config) error {
 }
 
 func PrintActions(c *Config) {
-	for action := range c.Actions {
+	for action := range c.EncounterActions {
 		if action == "exit" {
 			continue
 		}

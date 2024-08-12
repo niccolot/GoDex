@@ -194,7 +194,7 @@ func CommandPokedex(c *Config, args []string) error {
 	}
 
 	for key := range c.Pokedex {
-		fmt.Printf("- %s", key)
+		fmt.Printf("- %s\n", key)
 	}
 
 	return nil
@@ -219,11 +219,11 @@ func CommandBattle(c *Config, args []string) error {
 
 	pokemon := args[0]
 
-	fmt.Printf("Choose a pokemon to fight with %s", pokemon)
-	fmt.Printf("Enter 'inspect %s' if you have already catch it to check its stats", pokemon)
-	fmt.Println("Enter 'pokedex' to check your pokedex")
-	fmt.Println("Enter 'inspect <pokemon-name>' to check the stats of one of your pokemons")
-	fmt.Printf("Enter 'choose <pokemon-name>' to start the battle with the chosen pokemon")
+	fmt.Printf("Choose a pokemon to fight with %s\n", pokemon)
+	fmt.Printf("- Enter 'inspect %s' if you have already catch it to check its stats\n", pokemon)
+	fmt.Println("- Enter 'pokedex' to check your pokedex")
+	fmt.Println("- Enter 'inspect <pokemon-name>' to check the stats of one of your pokemons")
+	fmt.Printf("- Enter 'choose <pokemon-name>' to start the battle with the chosen pokemon\n")
 
 	line := liner.NewLiner()
 	defer line.Close()
@@ -235,7 +235,7 @@ func CommandBattle(c *Config, args []string) error {
 			return fmt.Errorf("failed reading line: %w", err)
 		}
 
-		go line.AppendHistory(input)
+		line.AppendHistory(input)
 		c.History = append(c.History, input)
 
 		commandName, args := ParseInput(input)
@@ -263,13 +263,15 @@ func CommandChoose(c *Config, args []string) error {
 	}
 	
 	playerPokemonName := args[0]
-
-	adversaryPokemon, err := GetPokemonStruct(c, c.EncounteredPokemon)
+	
+	encounteredPokemonURL := pokemonURLAPI + c.EncounteredPokemon
+	adversaryPokemon, err := GetPokemonStruct(c, encounteredPokemonURL)
 	if err != nil {
 		return err
 	}
 
-	playerPokemon, err := GetPokemonStruct(c, playerPokemonName)
+	playerPokemonURL := pokemonURLAPI + playerPokemonName
+	playerPokemon, err := GetPokemonStruct(c, playerPokemonURL)
 	if err != nil {
 		return err
 	}
@@ -297,33 +299,32 @@ func CommandChoose(c *Config, args []string) error {
 	playerHp -= damageToPlayer
 	adversaryHp -= damageToAdversary
 
-	fmt.Printf("%s attacks %s for %d damage points", playerPokemonName, c.EncounteredPokemon, damageToAdversary)
+	fmt.Printf("%s attacks %s for %d damage points\n", playerPokemonName, c.EncounteredPokemon, damageToAdversary)
 	if adversaryHp < 0 {
-		fmt.Printf("%s is stunned and got catched!", c.EncounteredPokemon)
+		fmt.Printf("%s is stunned and got catched!\n", c.EncounteredPokemon)
 		c.Pokedex[c.EncounteredPokemon] = adversaryPokemon
 
 		return nil
 	}
 
-	fmt.Printf("%s attacks %s for %d damage points", c.EncounteredPokemon, playerPokemonName, damageToPlayer)
+	fmt.Printf("%s attacks %s for %d damage points\n", c.EncounteredPokemon, playerPokemonName, damageToPlayer)
 	if playerHp < 0 {
-		fmt.Printf("%s is stunned and got removed from the pokedex!", playerPokemonName)
+		fmt.Printf("%s is stunned and got removed from the pokedex!\n", playerPokemonName)
 		delete(c.Pokedex, playerPokemonName)
 
 		return nil
 	}
 
 	if playerHp > adversaryHp {
-		fmt.Printf("%s won! %s escapes scared", playerPokemonName, c.EncounteredPokemon)
+		fmt.Printf("%s won! %s escapes scared\n", playerPokemonName, c.EncounteredPokemon)
 	} else {
-		fmt.Printf("%s loses! Better escape while you can", playerPokemonName)
+		fmt.Printf("%s loses! Better escape while you can\n", playerPokemonName)
 	}
 
 	return nil
 }
 
 func CommandSave(c *Config, args []string) error {
-	// Check if 'saves' folder exists
 	_, err := os.Stat("saves")
 	if os.IsNotExist(err) {
 		err := os.Mkdir("saves", os.ModePerm)
@@ -332,13 +333,12 @@ func CommandSave(c *Config, args []string) error {
 		}
 		fmt.Println("Created folder 'saves'")
 	} else if err != nil {
-		// Some other error occurred while checking the folder
 		return fmt.Errorf("failed to check folder existence: %v", err)
 	}
 
 	currentTime := time.Now()
 
-	// Format the time as "day_month_year_hour-minute"
+	// format the time as "day_month_year_hour-minute"
 	folderName := currentTime.Format("02_01_2006_15-04")
 	path := "saves/" + folderName
 	filePath := path + ".json"
@@ -349,7 +349,6 @@ func CommandSave(c *Config, args []string) error {
 }
 
 func CommandLoad(c *Config, args []string) error {
-	// Check if 'saves' folder exists
 	_, err := os.Stat("saves")
 	if os.IsNotExist(err) {
 		return fmt.Errorf("'saves' not found")
@@ -398,7 +397,7 @@ func CommandLoad(c *Config, args []string) error {
 				fmt.Println("Saved file loaded succesfully")
 				break
 			} else {
-				fmt.Printf("Invalid choice")
+				fmt.Printf("Invalid choice\n")
 			}
 			fmt.Println()
 		}

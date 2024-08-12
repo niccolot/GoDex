@@ -20,7 +20,7 @@ type Config struct {
 	PokeCache pokecache.Cache[[]byte]
 	EscapedPokemons pokecache.Cache[bool]
 	Pokedex map[string]PokeAPIPokemonInfo
-	Actions map[string]CliCommand
+	EncounterActions map[string]CliCommand
 	EncounteredPokemon string
 	BattleActions map[string]CliCommand
 }

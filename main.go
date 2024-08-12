@@ -25,7 +25,7 @@ func main() {
 			continue
 		}
 		
-		go line.AppendHistory(input)
+		line.AppendHistory(input)
 		c.History = append(c.History, input)
 
 		commandName, args := ParseInput(input)
