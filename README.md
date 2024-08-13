@@ -2,7 +2,7 @@
 
 Pokemon-like CLI game in which you can explore the pokemon world, battle pokemons and collect them in your personal pokedex.
 
-All the data are fetched from the [PokeAPI](https://pokeapi.co/) and subsequently cache for better performance in case of bad interent connection.
+All the data are fetched from the [PokeAPI](https://pokeapi.co/) and subsequently cached for better performance in case of bad interent connection.
 
 ## How to use 
 
@@ -19,7 +19,7 @@ go build && ./GoDex
 
 ## How to play
 
-Once started the program the REPL prompt is initiated
+Once started the program, a REPL prompt is initiated
 
 ```
 Pokedex >
@@ -28,6 +28,8 @@ Pokedex >
 Enter the command `help` to see the possible actions you can take. 
 
 Enter the command `exit` to quit the game.
+
+Use up and down arrows to navigate through previosly used commands.
 
 In order to go around the world enter the command `map`, which fetches the nearest 20 locations from the [PokeAPI](https://pokeap). 
 
@@ -164,10 +166,10 @@ shellos is stunned and got catched!
  Pokedex/Battle >
  ```
 
- Enter the command `exit` to exit this propts and go back.
+ Enter the command `exit` to exit this prompts and go back.
 
  ### Saving and loading progress
 
  You can save your pokedex to disk with the command `save`, which will produce a directory in which your progress are saved as JSON files.
 
- In order to load them back just use the `load` command and choose the file you want to load. The files are named as `day_month_year_hour-minute` depending on when you saved them.
+ In order to load them back just use the `load` command and choose the file you want to load. The files are named as `day_month_year_hour-minute.json` depending on when you saved them.
