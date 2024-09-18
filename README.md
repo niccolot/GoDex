@@ -31,7 +31,7 @@ Enter the command `exit` to quit the game.
 
 Use up and down arrows to navigate through previosly used commands.
 
-In order to go around the world enter the command `map`, which fetches the nearest 20 locations from the [PokeAPI](https://pokeap). 
+In order to go around the world enter the command `map`, which fetches the nearest 20 locations from the [PokeAPI](https://pokeapi.co/). 
 
 ```
 Pokedex > map
